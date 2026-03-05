@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bnfldt — Canva Creator Portfolio</title>
+
+  <!-- Fonts: Hubot Sans (300+) + Geist -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hubot+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Geist:wght@300;400&display=swap" rel="stylesheet">
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <style>
+    /* ─── Reset & Base ──────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --dark:   #1D1D1D;
+      --smoke:  #E7EDEB;
+      --bone:   #FCFAF8;
+      --mint:   #69A481;
+      --claret: #7C1F31;
+      --bone-mid: rgba(252,250,248,0.45);
+      /* Canva brand gradient */
+      --canva-grad: linear-gradient(to bottom right, #07B9CE 0%, #3969E7 58%, #7D2AE7 100%);
+    }
+
+    body {
+      background-color: var(--dark);
+      color: var(--bone);
+      font-family: 'Geist', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Grain Overlay ─────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ─── Keyframes ─────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* ─── Navigation ────────────────────────────────────── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 200;
+      padding: 24px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(to bottom, rgba(29,29,29,0.92) 0%, transparent 100%);
+    }
+    /* Interactive nav logo */
+    .nav-logo {
+      display: block;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .nav-logo:hover { transform: scale(1.06); }
+    .nav-logo:active { transform: scale(1); }
+    .nav-logo:focus-visible { outline: 2px solid var(--mint); outline-offset: 6px; border-radius: 2px; }
+
+    .nav-svg {
+      height: 26px; width: auto; display: block;
+      overflow: visible;
+    }
+    /* Base text: bone white */
+    .nav-svg .logo-base {
+      fill: var(--bone);
+    }
+    .nav-logo .nav-svg {
+      transition: filter 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .nav-logo:hover .nav-svg {
+      filter:
+        drop-shadow(0 0 10px rgba(252,250,248,0.45))
+        drop-shadow(0 0 26px rgba(235,210,165,0.2));
+    }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid rgba(252,250,248,0.18);
+      background: transparent; color: var(--bone);
+      font-family: 'Hubot Sans', sans-serif; font-size: 13px; font-weight: 500;
+      letter-spacing: 0.02em; padding: 10px 20px; border-radius: 4px;
+      text-decoration: none;
+      transition: border-color 0.25s ease, background 0.25s ease,
+                  transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .nav-cta:hover { border-color: rgba(252,250,248,0.45); background: rgba(252,250,248,0.05); transform: translateY(-2px); }
+    .nav-cta:active { transform: translateY(0); }
+    .nav-cta:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; }
+
+    /* ─── Hero ──────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 140px 40px 100px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -10%; left: 50%;
+      transform: translateX(-50%);
+      width: 80vw; height: 60vh;
+      background: radial-gradient(ellipse at center, rgba(105,164,129,0.09) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute; bottom: 0; right: 0;
+      width: 40vw; height: 40vh;
+      background: radial-gradient(ellipse at bottom right, rgba(57,105,231,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Geist', sans-serif; font-weight: 300;
+      font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--mint); margin-bottom: 28px;
+      animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.05s both;
+    }
+    .hero-headline {
+      font-family: 'Hubot Sans', sans-serif; font-weight: 700;
+      font-size: clamp(52px, 9.5vw, 126px); line-height: 0.93;
+      letter-spacing: -0.045em; color: var(--bone); margin-bottom: 32px;
+      animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+    }
+    .hero-headline em { font-style: italic; color: var(--mint); }
+    .hero-sub {
+      font-family: 'Geist', sans-serif; font-weight: 300;
+      font-size: clamp(15px, 1.8vw, 18px); line-height: 1.75;
+      color: var(--bone-mid); max-width: 440px; margin: 0 auto 52px;
+      animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) 0.25s both;
+    }
+    .hero-btns {
+      display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+      animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) 0.35s both;
+    }
+
+    /* ─── Buttons ───────────────────────────────────────── */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--mint); color: var(--dark);
+      font-family: 'Hubot Sans', sans-serif; font-weight: 500; font-size: 14px;
+      letter-spacing: 0.01em; padding: 14px 28px; border-radius: 4px;
+      border: none; cursor: pointer; text-decoration: none;
+      box-shadow: 0 4px 24px rgba(105,164,129,0.28), 0 1px 4px rgba(105,164,129,0.15);
+      transition: background 0.2s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
+    }
+    .btn-primary:hover { background: #7ab890; transform: translateY(-3px); box-shadow: 0 10px 36px rgba(105,164,129,0.38); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; }
+
+    /* Canva gradient button */
+    .btn-canva {
+      display: inline-flex; align-items: center; gap: 10px;
+      /* Matches the Canva brand gradient: cyan → blue → purple */
+      background: linear-gradient(to bottom right, #07B9CE 0%, #3969E7 58%, #7D2AE7 100%);
+      color: #fff;
+      font-family: 'Hubot Sans', sans-serif; font-weight: 500; font-size: 14px;
+      letter-spacing: 0.01em; padding: 14px 28px; border-radius: 4px;
+      border: none; cursor: pointer; text-decoration: none;
+      position: relative; overflow: hidden;
+      box-shadow: 0 4px 24px rgba(57,105,231,0.4), 0 2px 8px rgba(125,42,231,0.25);
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, filter 0.3s ease;
+      isolation: isolate;
+    }
+    /* Shimmer overlay on hover */
+    .btn-canva::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom right, rgba(255,255,255,0.18) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .btn-canva:hover {
+      transform: translateY(-3px);
+      filter: brightness(1.1) saturate(1.08);
+      box-shadow: 0 14px 44px rgba(57,105,231,0.55), 0 6px 18px rgba(125,42,231,0.35);
+    }
+    .btn-canva:hover::after { opacity: 1; }
+    .btn-canva:active { transform: translateY(0); filter: brightness(1); }
+    .btn-canva:focus-visible { outline: 2px solid #07B9CE; outline-offset: 4px; }
+
+    /* Canva button large variant */
+    .btn-canva-lg {
+      font-size: 15px;
+      padding: 16px 34px;
+    }
+
+    /* ─── Scroll indicator ──────────────────────────────── */
+    .scroll-indicator {
+      position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      animation: fadeIn 1s 1.2s both;
+    }
+    .scroll-indicator span {
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(252,250,248,0.28); font-family: 'Geist', sans-serif;
+    }
+    .scroll-line {
+      width: 1px; height: 44px;
+      background: linear-gradient(to bottom, rgba(105,164,129,0.55), transparent);
+    }
+
+    /* ─── Ticker ────────────────────────────────────────── */
+    .ticker-wrap {
+      overflow: hidden;
+      border-top: 1px solid rgba(252,250,248,0.07);
+      border-bottom: 1px solid rgba(252,250,248,0.07);
+      padding: 13px 0; background: rgba(252,250,248,0.015);
+    }
+    .ticker-inner { display: flex; width: max-content; animation: ticker 28s linear infinite; }
+    .ticker-item {
+      display: flex; align-items: center; gap: 24px; padding: 0 40px;
+      font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 300;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: rgba(252,250,248,0.3); white-space: nowrap;
+    }
+    .ticker-dot {
+      display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+      background: var(--mint); opacity: 0.6;
+    }
+
+    /* ─── Work Section ──────────────────────────────────── */
+    .work-section {
+      padding: 100px 60px 130px;
+      max-width: 1300px; margin: 0 auto;
+    }
+    .section-header {
+      display: flex; align-items: center; gap: 20px; margin-bottom: 80px;
+    }
+    .section-label {
+      font-family: 'Geist', sans-serif; font-weight: 300;
+      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(252,250,248,0.35); white-space: nowrap;
+    }
+    .section-rule { flex: 1; height: 1px; background: rgba(252,250,248,0.07); }
+
+    /* Two-column layout: left info, right cards */
+    .work-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .work-headline {
+      font-family: 'Hubot Sans', sans-serif; font-weight: 700;
+      font-size: clamp(38px, 4.5vw, 60px); line-height: 1.0;
+      letter-spacing: -0.04em; color: var(--bone); margin-bottom: 22px;
+    }
+    .work-headline em { font-style: italic; color: var(--mint); }
+    .work-sub {
+      font-family: 'Geist', sans-serif; font-weight: 300;
+      font-size: 15px; line-height: 1.75;
+      color: rgba(252,250,248,0.42); max-width: 360px; margin-bottom: 40px;
+    }
+    .work-hint {
+      font-family: 'Geist', sans-serif; font-weight: 300;
+      font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: rgba(252,250,248,0.22);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .work-hint::before {
+      content: '';
+      display: inline-block; width: 24px; height: 1px;
+      background: rgba(252,250,248,0.22);
+    }
+
+    /* Project legend: 4 tags below the hint */
+    .dc-legend {
+      margin-top: 32px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .dc-legend-item {
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer; padding: 8px 0;
+      border-bottom: 1px solid rgba(252,250,248,0.05);
+      transition: border-color 0.2s ease;
+      background: none; border-top: none; border-left: none; border-right: none;
+      text-align: left; color: inherit;
+    }
+    .dc-legend-item:last-child { border-bottom: none; }
+    .dc-legend-item:hover { border-bottom-color: rgba(105,164,129,0.3); }
+    .dc-legend-item:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; border-radius: 2px; }
+    .dc-legend-num {
+      font-family: 'Geist', sans-serif; font-size: 10px; font-weight: 300;
+      letter-spacing: 0.12em; color: rgba(252,250,248,0.22); min-width: 20px;
+    }
+    .dc-legend-title {
+      font-family: 'Hubot Sans', sans-serif; font-size: 14px; font-weight: 500;
+      color: rgba(252,250,248,0.65); letter-spacing: -0.01em; flex: 1;
+      transition: color 0.2s ease;
+    }
+    .dc-legend-item:hover .dc-legend-title { color: var(--bone); }
+    .dc-legend-type {
+      font-family: 'Geist', sans-serif; font-size: 10px; font-weight: 300;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--mint);
+    }
+
+    /* ─── Display Cards ─────────────────────────────────── */
+    .dc-cards-col {
+      display: flex; align-items: center; justify-content: center;
+      /* Extra right padding so overflowing cards aren't clipped */
+      padding-right: 110px; padding-bottom: 80px;
+      overflow: visible;
+    }
+
+    .dc-scene {
+      display: grid;
+      grid-template-areas: 'stack';
+      place-items: start start;
+      position: relative;
+    }
+
+    /* Base card */
+    .dc-card {
+      grid-area: stack;
+      position: relative;
+      width: 352px;
+      border-radius: 14px;
+      border: 2px solid rgba(252,250,248,0.1);
+      background: rgba(252,250,248,0.04);
+      backdrop-filter: blur(10px);
+      padding: 18px 20px 16px;
+      transform: skewY(-8deg);
+      transition: transform 0.7s cubic-bezier(0.16,1,0.3,1),
+                  filter 0.7s ease,
+                  border-color 0.4s ease,
+                  box-shadow 0.4s ease;
+      cursor: pointer;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    /* Right-edge gradient — creates the "peek behind" illusion */
+    .dc-card::after {
+      content: '';
+      position: absolute;
+      right: -1px; top: -5%;
+      height: 110%; width: 200px;
+      background: linear-gradient(to left, #1D1D1D 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Dim overlay for back cards */
+    .dc-card::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: 14px;
+      background: rgba(29,29,29,0.52);
+      z-index: 4;
+      transition: opacity 0.7s ease;
+      pointer-events: none;
+    }
+
+    /* ── Card 1 — back ── */
+    .dc-card-1 {
+      filter: grayscale(100%);
+    }
+    .dc-card-1:hover {
+      transform: skewY(-8deg) translateY(-2.5rem);
+      filter: grayscale(0);
+      border-color: rgba(105,164,129,0.25);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 4px 16px rgba(105,164,129,0.1);
+    }
+    .dc-card-1:hover::before { opacity: 0; }
+
+    /* ── Card 2 ── */
+    .dc-card-2 {
+      transform: skewY(-8deg) translateX(2.2rem) translateY(0.9rem);
+      filter: grayscale(100%);
+    }
+    .dc-card-2:hover {
+      transform: skewY(-8deg) translateX(2.2rem) translateY(-0.5rem);
+      filter: grayscale(0);
+      border-color: rgba(105,164,129,0.25);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 4px 16px rgba(105,164,129,0.1);
+    }
+    .dc-card-2:hover::before { opacity: 0; }
+
+    /* ── Card 3 ── */
+    .dc-card-3 {
+      transform: skewY(-8deg) translateX(4.4rem) translateY(1.8rem);
+      filter: grayscale(100%);
+    }
+    .dc-card-3:hover {
+      transform: skewY(-8deg) translateX(4.4rem) translateY(0.5rem);
+      filter: grayscale(0);
+      border-color: rgba(105,164,129,0.25);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 4px 16px rgba(105,164,129,0.1);
+    }
+    .dc-card-3:hover::before { opacity: 0; }
+
+    /* ── Card 4 — front, full colour, no dim overlay, no ::after fade ── */
+    .dc-card-4 {
+      transform: skewY(-8deg) translateX(6.6rem) translateY(2.7rem);
+      border-color: rgba(105,164,129,0.22);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 3px 12px rgba(105,164,129,0.08);
+    }
+    .dc-card-4::before { display: none; }
+    .dc-card-4::after  { display: none; }
+    .dc-card-4:hover {
+      transform: skewY(-8deg) translateX(6.6rem) translateY(4.5rem);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    .dc-card:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; }
+
+    /* ── Card inner layout (matches original component structure) ── */
+    .dc-row-top {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 12px;
+      position: relative; z-index: 6;
+    }
+    .dc-icon-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(105,164,129,0.18);
+      flex-shrink: 0;
+    }
+    .dc-icon-badge svg { width: 14px; height: 14px; }
+    .dc-card-label {
+      font-family: 'Hubot Sans', sans-serif; font-size: 15px; font-weight: 500;
+      color: var(--mint); letter-spacing: -0.01em;
+    }
+
+    .dc-card-title {
+      font-family: 'Hubot Sans', sans-serif; font-size: 22px; font-weight: 500;
+      color: var(--bone); letter-spacing: -0.02em; line-height: 1.15;
+      margin-bottom: 8px;
+      position: relative; z-index: 6;
+    }
+
+    .dc-card-desc {
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 300;
+      line-height: 1.6; color: rgba(252,250,248,0.5);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      position: relative; z-index: 6;
+    }
+
+    .dc-card-footer {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 16px; padding-top: 12px;
+      border-top: 1px solid rgba(252,250,248,0.07);
+      position: relative; z-index: 6;
+    }
+    .dc-card-badge {
+      font-family: 'Geist', sans-serif; font-size: 10px; font-weight: 300;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgba(252,250,248,0.28);
+    }
+    .dc-card-dot {
+      display: inline-block; width: 3px; height: 3px; border-radius: 50%;
+      background: rgba(252,250,248,0.2);
+    }
+    .dc-card-type {
+      font-family: 'Geist', sans-serif; font-size: 10px; font-weight: 300;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgba(252,250,248,0.28);
+    }
+
+    /* ─── CTA Section ───────────────────────────────────── */
+    .cta-section {
+      border-top: 1px solid rgba(252,250,248,0.07);
+      padding: 130px 40px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute; top: -20%; left: 50%; transform: translateX(-50%);
+      width: 70vw; height: 60vh;
+      background: radial-gradient(ellipse at center, rgba(57,105,231,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid rgba(7,185,206,0.3);
+      border-radius: 100px; padding: 6px 14px;
+      font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 300;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: #07B9CE; margin-bottom: 32px;
+    }
+    .cta-badge-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: linear-gradient(135deg, #07B9CE, #7D2AE7);
+    }
+    .cta-headline {
+      font-family: 'Hubot Sans', sans-serif; font-weight: 700;
+      font-size: clamp(36px, 5.5vw, 68px); line-height: 1;
+      letter-spacing: -0.04em; color: var(--bone); margin-bottom: 22px;
+    }
+    .cta-sub {
+      font-family: 'Geist', sans-serif; font-size: 16px; font-weight: 300;
+      line-height: 1.75; color: rgba(252,250,248,0.42);
+      max-width: 420px; margin: 0 auto 48px;
+    }
+
+    /* ─── Footer ────────────────────────────────────────── */
+    .footer {
+      padding: 28px 40px;
+      border-top: 1px solid rgba(252,250,248,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-logo { height: 18px; width: auto; opacity: 0.4; }
+    .footer-copy {
+      font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 300;
+      color: rgba(252,250,248,0.22); letter-spacing: 0.04em;
+    }
+
+    /* ─── PDF Modal ─────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(18,18,18,0.97);
+      z-index: 800;
+      display: flex; flex-direction: column; align-items: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(8px);
+    }
+    .modal-backdrop.open { opacity: 1; pointer-events: all; }
+
+    .modal-bar {
+      width: 100%; padding: 20px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(252,250,248,0.07);
+      flex-shrink: 0;
+    }
+    .modal-title {
+      font-family: 'Hubot Sans', sans-serif; font-size: 14px; font-weight: 500;
+      color: rgba(252,250,248,0.65); letter-spacing: -0.01em;
+    }
+    .modal-close {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1px solid rgba(252,250,248,0.18);
+      background: transparent; color: var(--bone);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease,
+                  transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .modal-close:hover { border-color: rgba(252,250,248,0.45); background: rgba(252,250,248,0.08); transform: scale(1.08); }
+    .modal-close:active { transform: scale(1); }
+    .modal-close:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; }
+
+    .modal-content {
+      flex: 1; overflow-y: auto; width: 100%;
+      display: flex; justify-content: center; align-items: flex-start;
+      padding: 40px 24px;
+    }
+    .modal-content canvas {
+      max-width: min(780px, 100%); height: auto; display: block;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 6px 20px rgba(0,0,0,0.4);
+    }
+
+    .modal-controls {
+      width: 100%; padding: 18px 32px;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      border-top: 1px solid rgba(252,250,248,0.07);
+      flex-shrink: 0;
+    }
+    .modal-nav-btn {
+      width: 40px; height: 40px; border-radius: 6px;
+      border: 1px solid rgba(252,250,248,0.18);
+      background: transparent; color: var(--bone);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .modal-nav-btn:hover:not(:disabled) { border-color: rgba(252,250,248,0.4); background: rgba(252,250,248,0.07); }
+    .modal-nav-btn:disabled { opacity: 0.25; cursor: default; }
+    .modal-nav-btn:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; }
+
+    .modal-page-info {
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 300;
+      color: rgba(252,250,248,0.4); min-width: 72px; text-align: center;
+      letter-spacing: 0.04em;
+    }
+    .modal-loading {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; height: 300px;
+      color: rgba(252,250,248,0.3);
+      font-family: 'Geist', sans-serif; font-size: 12px; letter-spacing: 0.12em;
+    }
+    .modal-spinner {
+      width: 24px; height: 24px;
+      border: 2px solid rgba(252,250,248,0.1);
+      border-top-color: var(--mint);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* ─── Scroll Reveal ─────────────────────────────────── */
+    .reveal {
+      opacity: 0; transform: translateY(22px);
+      transition: opacity 0.75s cubic-bezier(0.16,1,0.3,1),
+                  transform 0.75s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-d1 { transition-delay: 0.08s; }
+    .reveal-d2 { transition-delay: 0.18s; }
+    .reveal-d3 { transition-delay: 0.28s; }
+    .reveal-d4 { transition-delay: 0.38s; }
+
+    /* ─── Scrollbar ─────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--dark); }
+    ::-webkit-scrollbar-thumb { background: rgba(252,250,248,0.12); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(252,250,248,0.22); }
+
+    /* ─── Responsive ────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .work-body { grid-template-columns: 1fr; gap: 60px; }
+      .dc-cards-col { padding-right: 80px; padding-bottom: 60px; justify-content: flex-start; }
+      .work-section { padding: 80px 32px 100px; }
+    }
+    @media (max-width: 640px) {
+      .nav { padding: 20px 24px; }
+      .hero { padding: 120px 24px 80px; }
+      .cta-section { padding: 90px 24px; }
+      .footer { padding: 24px; }
+      .modal-bar { padding: 16px 20px; }
+      .modal-controls { padding: 16px 20px; }
+      .modal-content { padding: 24px 16px; }
+      .dc-card { width: 290px; }
+      .dc-cards-col { padding-right: 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Navigation ──────────────────────────────────────── -->
+  <nav class="nav">
+    <a href="#" class="nav-logo" aria-label="bnfldt home">
+      <!-- Inline SVG so CSS can target .logo-base / .logo-grad for colour transitions -->
+      <svg class="nav-svg" viewBox="0 0 982 294" xmlns="http://www.w3.org/2000/svg"
+           xmlns:xlink="http://www.w3.org/1999/xlink"
+           style="fill-rule:evenodd;clip-rule:evenodd;" aria-label="bnfldt" role="img">
+        <g transform="matrix(1,0,0,1,-40.763,-345.786)">
+          <g transform="matrix(0.860705,0,0,0.860705,-97.7726,109.432)">
+            <text x="133.256px" y="611.163px" class="logo-base"
+                  style="font-family:'HubotSans-Light','Hubot Sans',sans-serif;font-weight:300;font-size:461.669px;font-feature-settings:'liga' 1,'clig' 1;font-variant-ligatures:common-ligatures;">
+              bn<tspan x="651.71px" y="611.163px">fl</tspan>dt
+            </text>
+          </g>
+        </g>
+      </svg>
+    </a>
+    <a href="#work" class="nav-cta">
+      View Work
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </nav>
+
+  <!-- ─── Hero ────────────────────────────────────────────── -->
+  <section class="hero" aria-label="Introduction">
+
+    <p class="hero-eyebrow">Canva Creator Portfolio</p>
+    <h1 class="hero-headline">
+      Designed with<br><em>intention.</em>
+    </h1>
+    <p class="hero-sub">
+      Brand templates and business assets built entirely in Canva — crafted for clarity, built to stand out.
+    </p>
+    <div class="hero-btns">
+      <a href="#work" class="btn-primary">
+        Explore Work
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+          <path d="M2 7.5h11M9 3.5l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a href="https://www.canva.com/design/DAHDFYyKNBE/W7snJxRx0_10tho_b8uivA/edit?utm_content=DAHDFYyKNBE&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" target="_blank" rel="noopener noreferrer" class="btn-canva" id="canva-cta-hero">
+        View Example Work
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M5 2h7v7M12 2L6 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="scroll-indicator" aria-hidden="true">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ─── Ticker ───────────────────────────────────────────── -->
+  <div class="ticker-wrap" aria-hidden="true">
+    <div class="ticker-inner">
+      <div class="ticker-item">Brand Identity <span class="ticker-dot"></span> Pitch Decks <span class="ticker-dot"></span> CV Templates <span class="ticker-dot"></span> One-Pagers <span class="ticker-dot"></span> Canva Templates <span class="ticker-dot"></span> Visual Design <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Brand Identity <span class="ticker-dot"></span> Pitch Decks <span class="ticker-dot"></span> CV Templates <span class="ticker-dot"></span> One-Pagers <span class="ticker-dot"></span> Canva Templates <span class="ticker-dot"></span> Visual Design <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Brand Identity <span class="ticker-dot"></span> Pitch Decks <span class="ticker-dot"></span> CV Templates <span class="ticker-dot"></span> One-Pagers <span class="ticker-dot"></span> Canva Templates <span class="ticker-dot"></span> Visual Design <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Brand Identity <span class="ticker-dot"></span> Pitch Decks <span class="ticker-dot"></span> CV Templates <span class="ticker-dot"></span> One-Pagers <span class="ticker-dot"></span> Canva Templates <span class="ticker-dot"></span> Visual Design <span class="ticker-dot"></span></div>
+    </div>
+  </div>
+
+  <!-- ─── Work Section ─────────────────────────────────────── -->
+  <section id="work" class="work-section" aria-label="Selected work">
+
+    <div class="section-header reveal">
+      <span class="section-label">Selected Work</span>
+      <div class="section-rule"></div>
+      <span class="section-label" style="color: rgba(252,250,248,0.18);">04</span>
+    </div>
+
+    <div class="work-body">
+      <!-- Left: Text info + project list -->
+      <div class="work-info-col reveal reveal-d1">
+        <h2 class="work-headline">Work built<br><em>in Canva.</em></h2>
+        <p class="work-sub">
+          Four pieces spanning brand identity, presentation design, and professional documentation — each made in Canva.
+        </p>
+        <p class="work-hint">Hover to preview. Click to explore.</p>
+
+        <!-- Project legend: clicking opens PDF viewer -->
+        <div class="dc-legend" id="dc-legend" role="list" aria-label="Project list">
+          <!-- Built by JS -->
+        </div>
+      </div>
+
+      <!-- Right: Stacked Display Cards -->
+      <div class="dc-cards-col reveal reveal-d2">
+        <div class="dc-scene" id="dc-scene" aria-label="Project cards" role="list">
+          <!-- Built by JS -->
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ─── CTA Section ──────────────────────────────────────── -->
+  <section class="cta-section" aria-label="Call to action">
+    <div class="reveal">
+      <div class="cta-badge">
+        <span class="cta-badge-dot"></span>
+        Made in Canva
+      </div>
+      <h2 class="cta-headline">See the full<br>collection.</h2>
+      <p class="cta-sub">
+        Every template crafted in Canva. <br /> Explore the complete library.
+      </p>
+      <a href="https://www.canva.com/design/DAHDFYyKNBE/W7snJxRx0_10tho_b8uivA/edit?utm_content=DAHDFYyKNBE&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" target="_blank" rel="noopener noreferrer"
+         class="btn-canva btn-canva-lg" id="canva-cta-main">
+        View Example Work
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M5 3h8v8M13 3L5.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ─── Footer ───────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    <img src="brand_assets/bnfldt logo bone white.svg" alt="bnfldt" class="footer-logo">
+    <span class="footer-copy">© 2026 bnfldt. All rights reserved.</span>
+  </footer>
+
+  <!-- ─── PDF Modal ────────────────────────────────────────── -->
+  <div class="modal-backdrop" id="pdf-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-text">
+    <div class="modal-bar">
+      <span class="modal-title" id="modal-title-text"></span>
+      <button class="modal-close" id="modal-close" aria-label="Close PDF viewer">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-content" id="modal-content">
+      <div class="modal-loading" id="modal-loading">
+        <div class="modal-spinner"></div>
+        <span>Loading document…</span>
+      </div>
+      <canvas id="modal-canvas" style="display:none;"></canvas>
+    </div>
+    <div class="modal-controls">
+      <button class="modal-nav-btn" id="modal-prev" aria-label="Previous page" disabled>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <span class="modal-page-info" id="modal-page-info" aria-live="polite">— / —</span>
+      <button class="modal-nav-btn" id="modal-next" aria-label="Next page" disabled>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Scripts ──────────────────────────────────────────── -->
+  <script>
+    // ── PDF.js ──────────────────────────────────────────────
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // ── Project Data ────────────────────────────────────────
+    const PROJECTS = [
+      {
+        file:  'projects/bnfldt brand guidelines.pdf',
+        title: 'Brand Guidelines',
+        type:  'Brand Identity',
+        desc:  'Complete visual identity — typography, palette, and usage rules.',
+        icon:  `<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="7" cy="7" r="5.5"/><circle cx="7" cy="7" r="2"/>
+                  <line x1="7" y1="1.5" x2="7" y2="4.9"/><line x1="7" y1="9.1" x2="7" y2="12.5"/>
+                </svg>`
+      },
+      {
+        file:  'projects/bnfldt cv template.pdf',
+        title: 'CV Template',
+        type:  'Document Design',
+        desc:  'A polished, professional résumé layout built for impact.',
+        icon:  `<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="1.5" width="10" height="11" rx="1.5"/>
+                  <line x1="4.5" y1="4.5" x2="9.5" y2="4.5"/>
+                  <line x1="4.5" y1="7" x2="9.5" y2="7"/>
+                  <line x1="4.5" y1="9.5" x2="7" y2="9.5"/>
+                </svg>`
+      },
+      {
+        file:  'projects/bnfldt one pager.pdf',
+        title: 'One Pager',
+        type:  'Business Overview',
+        desc:  'A concise agency introduction built for quick, impactful reading.',
+        icon:  `<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1.5" y="1.5" width="11" height="11" rx="1.5"/>
+                  <line x1="4" y1="5" x2="10" y2="5"/>
+                  <line x1="4" y1="7" x2="10" y2="7"/>
+                  <line x1="4" y1="9" x2="7.5" y2="9"/>
+                </svg>`
+      },
+      {
+        file:  'projects/bnfldt pitch deck.pdf',
+        title: 'Pitch Deck',
+        type:  'Presentation',
+        desc:  'A structured narrative deck designed to communicate value and vision.',
+        icon:  `<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="2" width="12" height="8" rx="1.5"/>
+                  <line x1="7" y1="10" x2="7" y2="13"/>
+                  <line x1="4.5" y1="13" x2="9.5" y2="13"/>
+                  <line x1="4" y1="7.5" x2="4" y2="6.5"/><line x1="6.5" y1="7.5" x2="6.5" y2="5"/>
+                  <line x1="9" y1="7.5" x2="9" y2="4"/>
+                </svg>`
+      }
+    ];
+
+    const pdfCache = {};
+
+    // ── Build Display Cards ─────────────────────────────────
+    function buildDisplayCards() {
+      const scene  = document.getElementById('dc-scene');
+      const legend = document.getElementById('dc-legend');
+
+      PROJECTS.forEach((project, i) => {
+        // ── Card ──
+        const card = document.createElement('div');
+        card.className = `dc-card dc-card-${i + 1}`;
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'listitem');
+        card.setAttribute('aria-label', `Open ${project.title}`);
+
+        card.innerHTML = `
+          <div class="dc-row-top">
+            <span class="dc-icon-badge" style="color: var(--mint);">${project.icon}</span>
+            <p class="dc-card-label">${project.title}</p>
+          </div>
+          <p class="dc-card-title">${project.title}</p>
+          <p class="dc-card-desc">${project.desc}</p>
+          <div class="dc-card-footer">
+            <span class="dc-card-badge">Made in Canva</span>
+            <span class="dc-card-dot"></span>
+            <span class="dc-card-type">${project.type}</span>
+          </div>
+        `;
+
+        card.addEventListener('click', () => openModal(project, i));
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(project, i); }
+        });
+
+        scene.appendChild(card);
+
+        // ── Legend item ──
+        const item = document.createElement('button');
+        item.className = 'dc-legend-item';
+        item.setAttribute('role', 'listitem');
+        item.setAttribute('aria-label', `View ${project.title}`);
+        item.innerHTML = `
+          <span class="dc-legend-num">0${i + 1}</span>
+          <span class="dc-legend-title">${project.title}</span>
+          <span class="dc-legend-type">${project.type}</span>
+        `;
+        item.addEventListener('click', () => openModal(project, i));
+        legend.appendChild(item);
+      });
+    }
+
+    // ── PDF Modal ───────────────────────────────────────────
+    let modalPdf   = null;
+    let modalPage  = 1;
+    let modalTotal = 1;
+
+    async function openModal(project, index) {
+      const modal   = document.getElementById('pdf-modal');
+      const canvas  = document.getElementById('modal-canvas');
+      const loading = document.getElementById('modal-loading');
+
+      document.getElementById('modal-title-text').textContent = project.title;
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      canvas.style.display = 'none';
+      loading.style.display = 'flex';
+      modalPage = 1;
+
+      try {
+        modalPdf = pdfCache[index] || await pdfjsLib.getDocument(project.file).promise;
+        pdfCache[index] = modalPdf;
+        modalTotal = modalPdf.numPages;
+        await renderModalPage(1);
+        loading.style.display = 'none';
+        canvas.style.display  = 'block';
+        updateModalControls();
+      } catch (err) {
+        loading.innerHTML = '<span style="color:rgba(252,250,248,0.35);font-size:13px;">Could not load document.</span>';
+        console.error('Modal PDF error:', err);
+      }
+    }
+
+    async function renderModalPage(num) {
+      const canvas = document.getElementById('modal-canvas');
+      const page   = await modalPdf.getPage(num);
+      const maxW   = Math.min(window.innerWidth - 48, 780);
+      const vp0    = page.getViewport({ scale: 1 });
+      const vp     = page.getViewport({ scale: maxW / vp0.width });
+
+      canvas.width  = vp.width;
+      canvas.height = vp.height;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      document.getElementById('modal-content').scrollTop = 0;
+    }
+
+    function updateModalControls() {
+      document.getElementById('modal-page-info').textContent = `${modalPage} / ${modalTotal}`;
+      document.getElementById('modal-prev').disabled = modalPage <= 1;
+      document.getElementById('modal-next').disabled = modalPage >= modalTotal;
+    }
+
+    function closeModal() {
+      document.getElementById('pdf-modal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.getElementById('pdf-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('pdf-modal')) closeModal();
+    });
+    document.getElementById('modal-prev').addEventListener('click', async () => {
+      if (modalPage > 1) { modalPage--; await renderModalPage(modalPage); updateModalControls(); }
+    });
+    document.getElementById('modal-next').addEventListener('click', async () => {
+      if (modalPage < modalTotal) { modalPage++; await renderModalPage(modalPage); updateModalControls(); }
+    });
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('pdf-modal').classList.contains('open')) return;
+      if (e.key === 'Escape') closeModal();
+      if ((e.key === 'ArrowRight' || e.key === 'ArrowDown') && modalPage < modalTotal) {
+        modalPage++; renderModalPage(modalPage).then(updateModalControls);
+      }
+      if ((e.key === 'ArrowLeft' || e.key === 'ArrowUp') && modalPage > 1) {
+        modalPage--; renderModalPage(modalPage).then(updateModalControls);
+      }
+    });
+
+    // ── Scroll Reveal ───────────────────────────────────────
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+
+    // ── Init ────────────────────────────────────────────────
+    buildDisplayCards();
+    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+  </script>
+
+  <!-- ─── Custom Cursor ─────────────────────────────────── -->
+  <div id="cursor-dot"  aria-hidden="true"></div>
+  <div id="cursor-ring" aria-hidden="true"></div>
+
+  <style>
+    * { cursor: none !important; }
+
+    #cursor-dot {
+      position: fixed;
+      left: 0; top: 0;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--mint);
+      pointer-events: none;
+      z-index: 999999;
+      transform: translate(-50%, -50%);
+      transition:
+        opacity 0.2s ease,
+        transform 0.18s cubic-bezier(0.34,1.56,0.64,1),
+        background 0.25s ease;
+      will-change: left, top, transform;
+    }
+
+    #cursor-ring {
+      position: fixed;
+      left: 0; top: 0;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(105,164,129,0.65);
+      pointer-events: none;
+      z-index: 999998;
+      transform: translate(-50%, -50%);
+      transition:
+        width  0.35s cubic-bezier(0.34,1.56,0.64,1),
+        height 0.35s cubic-bezier(0.34,1.56,0.64,1),
+        border-color 0.3s ease,
+        background   0.3s ease,
+        opacity      0.3s ease;
+      will-change: left, top, width, height;
+    }
+
+    /* Hover state */
+    body.cursor-hover #cursor-dot {
+      transform: translate(-50%,-50%) scale(0);
+      opacity: 0;
+    }
+    body.cursor-hover #cursor-ring {
+      width: 46px; height: 46px;
+      border-color: rgba(105,164,129,1);
+      background: rgba(105,164,129,0.08);
+    }
+
+    /* Click state */
+    body.cursor-click #cursor-dot {
+      background: #fff;
+    }
+    body.cursor-click #cursor-ring {
+      width: 54px; height: 54px;
+      border-color: rgba(105,164,129,0.4);
+      background: rgba(105,164,129,0.03);
+      transition:
+        width  0.1s ease,
+        height 0.1s ease,
+        border-color 0.1s ease,
+        background   0.1s ease;
+    }
+
+    /* Off-screen: hidden */
+    body.cursor-out #cursor-dot,
+    body.cursor-out #cursor-ring { opacity: 0; }
+  </style>
+
+  <script>
+    (function () {
+      const dot  = document.getElementById('cursor-dot');
+      const ring = document.getElementById('cursor-ring');
+
+      let mx = -200, my = -200;
+      let rx = -200, ry = -200;
+
+      const LERP = 0.13;
+      function lerp(a, b, t) { return a + (b - a) * t; }
+
+      document.addEventListener('mousemove', e => {
+        mx = e.clientX;
+        my = e.clientY;
+        document.body.classList.remove('cursor-out');
+      });
+      document.addEventListener('mouseleave', () => document.body.classList.add('cursor-out'));
+      document.addEventListener('mouseenter', () => document.body.classList.remove('cursor-out'));
+
+      const INTERACTIVE = 'a,button,[role="button"],.dc-card,.dc-legend-item,.nav-logo,.nav-cta,.btn-primary,.btn-canva,.modal-close,.modal-btn,.modal-nav-btn,.footer-logo';
+
+      document.addEventListener('mouseover', e => {
+        if (e.target.closest(INTERACTIVE)) document.body.classList.add('cursor-hover');
+      });
+      document.addEventListener('mouseout', e => {
+        if (e.target.closest(INTERACTIVE)) document.body.classList.remove('cursor-hover');
+      });
+
+      document.addEventListener('mousedown', () => document.body.classList.add('cursor-click'));
+      document.addEventListener('mouseup',   () => document.body.classList.remove('cursor-click'));
+
+      function tick() {
+        // Dot: instant snap
+        dot.style.left = mx + 'px';
+        dot.style.top  = my + 'px';
+
+        // Ring: smooth lerp trail
+        rx = lerp(rx, mx, LERP);
+        ry = lerp(ry, my, LERP);
+        ring.style.left = rx + 'px';
+        ring.style.top  = ry + 'px';
+
+        requestAnimationFrame(tick);
+      }
+      tick();
+    })();
+  </script>
+
+</body>
+</html>
