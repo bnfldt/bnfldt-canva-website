@@ -16,7 +16,7 @@
   <style>
     /* ─── Reset & Base ──────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
 
     :root {
       --dark:   #1D1D1D;
@@ -251,6 +251,7 @@
     .work-section {
       padding: 100px 60px 130px;
       max-width: 1300px; margin: 0 auto;
+      position: relative; z-index: 1;
     }
     .section-header {
       display: flex; align-items: center; gap: 20px; margin-bottom: 80px;
@@ -326,7 +327,7 @@
 
     /* ─── Display Cards ─────────────────────────────────── */
     .dc-cards-col {
-      display: flex; align-items: center; justify-content: center;
+      display: flex; align-items: flex-start; justify-content: flex-start;
       /* Extra right padding so overflowing cards aren't clipped */
       padding-right: 110px; padding-bottom: 80px;
       overflow: visible;
@@ -351,6 +352,7 @@
       padding: 18px 20px 16px;
       transform: skewY(-8deg);
       transition: transform 0.7s cubic-bezier(0.16,1,0.3,1),
+                  height  0.7s cubic-bezier(0.16,1,0.3,1),
                   filter 0.7s ease,
                   border-color 0.4s ease,
                   box-shadow 0.4s ease;
@@ -368,7 +370,16 @@
       background: linear-gradient(to left, #1D1D1D 0%, transparent 100%);
       pointer-events: none;
       z-index: 5;
+      transition: opacity 0.4s ease;
     }
+
+    /* Expanded state */
+    .dc-card.is-expanding {
+      border-color: rgba(105,164,129,0.4) !important;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.55), 0 6px 24px rgba(105,164,129,0.18) !important;
+    }
+    .dc-card.is-expanding::after  { opacity: 0; }
+    .dc-card.is-expanding::before { opacity: 0 !important; }
 
     /* Dim overlay for back cards */
     .dc-card::before {
@@ -432,6 +443,33 @@
     }
 
     .dc-card:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; }
+
+    /* ── PDF hover preview ── */
+    .card-preview-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+      opacity: 0;
+      z-index: 10;
+      pointer-events: none;
+      transition: opacity 0.45s ease;
+    }
+    .card-preview-scrim {
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 80px;
+      background: linear-gradient(to top, rgba(29,29,29,0.92) 0%, transparent 100%);
+      border-radius: 0 0 12px 12px;
+      z-index: 11;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.45s ease;
+    }
+    .dc-card:hover .card-preview-canvas,
+    .dc-card.is-expanding .card-preview-canvas,
+    .dc-card:hover .card-preview-scrim,
+    .dc-card.is-expanding .card-preview-scrim { opacity: 1; }
 
     /* ── Card inner layout (matches original component structure) ── */
     .dc-row-top {
@@ -650,8 +688,19 @@
       .modal-bar { padding: 16px 20px; }
       .modal-controls { padding: 16px 20px; }
       .modal-content { padding: 24px 16px; }
-      .dc-card { width: 290px; }
-      .dc-cards-col { padding-right: 60px; }
+      /* Card stack: scale down to fit ~390px viewports.
+         Card (290px) + card-4 offset (6.6rem = ~106px) = ~396px → scale to ~0.72 fits. */
+      .dc-cards-col {
+        overflow: hidden;
+        padding-right: 0;
+        padding-bottom: 0;
+        align-items: flex-start;
+      }
+      .dc-scene {
+        transform: scale(0.72);
+        transform-origin: top left;
+        margin-bottom: -52px; /* compensate for layout space reclaimed by scale */
+      }
     }
   </style>
 </head>
@@ -875,6 +924,14 @@
 
     const pdfCache = {};
 
+    // Transforms without skew — function list matches CSS so transitions interpolate cleanly
+    const EXPAND_TRANSFORMS = [
+      'skewY(0deg)',
+      'skewY(0deg) translateX(2.2rem) translateY(0.9rem)',
+      'skewY(0deg) translateX(4.4rem) translateY(1.8rem)',
+      'skewY(0deg) translateX(6.6rem) translateY(2.7rem)',
+    ];
+
     // ── Build Display Cards ─────────────────────────────────
     function buildDisplayCards() {
       const scene  = document.getElementById('dc-scene');
@@ -902,6 +959,105 @@
           </div>
         `;
 
+        // ── PDF preview canvas ──
+        const previewCanvas = document.createElement('canvas');
+        previewCanvas.className = 'card-preview-canvas';
+        previewCanvas.setAttribute('aria-hidden', 'true');
+        card.appendChild(previewCanvas);
+
+        const previewScrim = document.createElement('div');
+        previewScrim.className = 'card-preview-scrim';
+        card.appendChild(previewScrim);
+
+        let previewRendered  = false;
+        let origHeight       = null;
+        let isHovering       = false;
+        let collapseListener = null;
+
+        function expandHeight() {
+          if (project.isPortrait === undefined) return;
+          const ratio  = project.isPortrait ? 1.414 : (1 / 1.414);
+          const target = (card.offsetWidth * ratio) + 'px';
+          if (card.style.height !== target) card.style.height = target;
+        }
+
+        async function expand() {
+          isHovering = true;
+
+          // Cancel any in-flight collapse cleanup
+          if (collapseListener) {
+            card.removeEventListener('transitionend', collapseListener);
+            collapseListener = null;
+          }
+
+          // Capture dimensions before any style changes
+          if (origHeight === null) origHeight = card.offsetHeight;
+          const origWidth = card.offsetWidth;
+
+          // Switch to absolute positioning FIRST — takes card out of grid flow so
+          // height changes don't cause dc-scene / grid row to reflow and push the legend
+          card.style.width    = origWidth + 'px';
+          card.style.position = 'absolute';
+          card.style.top      = '0';
+          card.style.left     = '0';
+
+          // Pin height, force reflow, then animate to A4
+          card.style.height = origHeight + 'px';
+          void card.offsetHeight;
+
+          card.style.zIndex    = '100';
+          card.style.transform = EXPAND_TRANSFORMS[i];
+          card.style.filter    = 'grayscale(0)';
+          card.classList.add('is-expanding');
+          expandHeight();
+
+          if (!previewRendered) {
+            previewRendered = true;
+            try {
+              const pdf  = pdfCache[i] || await pdfjsLib.getDocument(project.file).promise;
+              pdfCache[i] = pdf;
+              const page = await pdf.getPage(1);
+              const vp0  = page.getViewport({ scale: 1 });
+              project.isPortrait = vp0.height >= vp0.width;
+              if (isHovering) expandHeight();
+              const cardW = card.offsetWidth || 352;
+              const vp    = page.getViewport({ scale: cardW / vp0.width });
+              previewCanvas.width  = vp.width;
+              previewCanvas.height = vp.height;
+              await page.render({ canvasContext: previewCanvas.getContext('2d'), viewport: vp }).promise;
+            } catch (e) {
+              previewRendered = false;
+            }
+          }
+        }
+
+        function collapse() {
+          isHovering = false;
+          card.style.zIndex    = '';
+          card.style.transform = '';
+          card.style.filter    = '';
+          card.classList.remove('is-expanding');
+
+          if (origHeight !== null) {
+            card.style.height = origHeight + 'px';
+            collapseListener = function onCollapse(e) {
+              if (e.propertyName === 'height') {
+                // Restore card to grid flow once collapsed
+                card.style.position = '';
+                card.style.top      = '';
+                card.style.left     = '';
+                card.style.width    = '';
+                card.style.height   = '';
+                card.removeEventListener('transitionend', collapseListener);
+                collapseListener = null;
+              }
+            };
+            card.addEventListener('transitionend', collapseListener);
+          }
+        }
+
+        card.addEventListener('mouseenter', expand);
+        card.addEventListener('mouseleave', collapse);
         card.addEventListener('click', () => openModal(project, i));
         card.addEventListener('keydown', e => {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(project, i); }
@@ -919,6 +1075,8 @@
           <span class="dc-legend-title">${project.title}</span>
           <span class="dc-legend-type">${project.type}</span>
         `;
+        item.addEventListener('mouseenter', expand);
+        item.addEventListener('mouseleave', collapse);
         item.addEventListener('click', () => openModal(project, i));
         legend.appendChild(item);
       });
@@ -1012,8 +1170,33 @@
       });
     }, { threshold: 0.08 });
 
+    // ── Preload PDF orientations (non-blocking) ─────────────
+    // Fetches each PDF's page dimensions in the background so the A4 height
+    // expansion works on first hover without waiting for a full render.
+    async function preloadOrientations() {
+      for (const [i, project] of PROJECTS.entries()) {
+        if (project.isPortrait !== undefined) continue;
+        try {
+          const pdf  = pdfCache[i] || await pdfjsLib.getDocument(project.file).promise;
+          pdfCache[i] = pdf;
+          const page = await pdf.getPage(1);
+          const vp0  = page.getViewport({ scale: 1 });
+          project.isPortrait = vp0.height >= vp0.width;
+        } catch (e) { /* silent */ }
+      }
+    }
+
     // ── Init ────────────────────────────────────────────────
     buildDisplayCards();
+
+    // Lock dc-scene's natural dimensions so it never collapses when cards go
+    // position:absolute during expansion (an empty grid tracks to zero otherwise,
+    // causing flex re-centering to jump all cards to a different location)
+    const sceneEl = document.getElementById('dc-scene');
+    sceneEl.style.minWidth  = sceneEl.offsetWidth  + 'px';
+    sceneEl.style.minHeight = sceneEl.offsetHeight + 'px';
+
+    preloadOrientations();
     document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
   </script>
 
