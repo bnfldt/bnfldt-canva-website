@@ -688,18 +688,12 @@
       .modal-bar { padding: 16px 20px; }
       .modal-controls { padding: 16px 20px; }
       .modal-content { padding: 24px 16px; }
-      /* Card stack: scale down to fit ~390px viewports.
-         Card (290px) + card-4 offset (6.6rem = ~106px) = ~396px → scale to ~0.72 fits. */
+      /* Let cards overflow naturally — html { overflow-x: hidden } stops panning.
+         Clipping or scaling causes skewed cards to be visually cropped. */
       .dc-cards-col {
-        overflow: hidden;
+        overflow: visible;
         padding-right: 0;
-        padding-bottom: 0;
-        align-items: flex-start;
-      }
-      .dc-scene {
-        transform: scale(0.72);
-        transform-origin: top left;
-        margin-bottom: -52px; /* compensate for layout space reclaimed by scale */
+        padding-bottom: 20px;
       }
     }
   </style>
